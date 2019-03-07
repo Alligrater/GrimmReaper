@@ -69,22 +69,25 @@ class TextBundle{
 			var boxcount = this.jsonchunks[this.index_i][this.index_j].parameters.length;
 			for(var i = 0; i < boxcount; i++){
 				//by default, they should have fixed width and height.
-				var bw = 1200;
-				var bh = 100;
-				var box = new iBox(this.jsonchunks[this.index_i][this.index_j].parameters[i], 800, 350 + i * 120, bw, bh, "Choices");
-				box.action = this.jsonchunks[this.index_i][this.index_j].action[i];
+				var boxtext = this.jsonchunks[this.index_i][this.index_j].parameters[i];
+
+				var box = new iBox(boxtext, 800 + TEXT_PADDING, 350 + i * 120, textWidth(boxtext) + TEXT_PADDING * 2, CHOICE_BOXHEIGHT, "Choices");
+				if(this.jsonchunks[this.index_i][this.index_j].action){
+					box.action = this.jsonchunks[this.index_i][this.index_j].action[i];
+				}
 				console.log(box.action);
 				this.listofobjects.push(box);
 			}
 
 		}
 		else if(this.jsonchunks[this.index_i][this.index_j].type == "Message"){
-			var msgbox = new iBox(this.jsonchunks[this.index_i][this.index_j].parameters[0], 800, 750, 1400, 300, "Message");
+			var msgbox = new iBox(this.jsonchunks[this.index_i][this.index_j].parameters[0], 800, 750, MSG_BOXWIDTH, MSG_BOXHEIGHT, "Message");
+			msgbox.sender = this.jsonchunks[this.index_i][this.index_j].sender;
 			this.listofobjects.push(msgbox);
 		}
 		else{
 			//Special Condition Resolver: Stage and Action Tags.
-			var msgbox = new iBox("This part is not meant for display. If you manage to see this part, it means the code is running fine.", 800, 750, 1400, 300, "Generic");
+			var msgbox = new iBox("This part is not meant for display. If you manage to see this part, it means the code is running fine.", 800, 750, MSG_BOXWIDTH, MSG_BOXHEIGHT, "Generic");
 			this.listofobjects.push(msgbox);
 		}
 	}
@@ -106,6 +109,7 @@ class iBox{
 			this.isfocused = false;
 			this.type = type;
 			this.message = message;
+			this.sender;
 			this.x = x;
 			this.y = y;
 			this.width = width; //Use absolute width. We don't scale the window anyways.
@@ -113,6 +117,14 @@ class iBox{
 			this.action;
 			this.lifetime = 0;
 			this.iscomplete = false;
+		}
+
+		calculateX(){
+			return this.x - this.width/2 + TEXT_PADDING;
+		}
+
+		calculateY(){
+			return this.y - this.height/2 + TEXT_PADDING;
 		}
 
 		draw(){
@@ -127,20 +139,22 @@ class iBox{
 				noStroke();
 				fill(239,31,149);//Alligrater Pink
 				textSize(18);
-				textAlign(CENTER);
+				textAlign(LEFT);
+
+
 
 				if(this.type == "Message" && this.iscomplete != true){
 					if(this.lifetime > this.message.length){
-						text(this.message, this.x, this.y);
+						text(this.message, this.calculateX(), this.calculateY());
 						this.iscomplete = true;
 					}
 					else{
-						text(this.message.substring(0, this.lifetime), this.x, this.y);
+						text(this.message.substring(0, this.lifetime), this.calculateX(), this.calculateY());
 					}
 
 				}
 				else{
-					text(this.message, this.x, this.y);
+					text(this.message, this.calculateX(), this.calculateY());
 					this.iscomplete = true;
 				}
 
@@ -156,10 +170,23 @@ class iBox{
 				noStroke();
 				fill(51,51,51);//Alligrater Pink
 				textSize(18);
-				textAlign(CENTER);
-				text(this.message, this.x, this.y);
+				textAlign(LEFT);
+				text(this.message, this.calculateX(), this.calculateY());
 			}
 
+			if(this.sender){
+				rectMode(CENTER);
+				fill(239,31,149)
+				strokeWeight(4);
+				stroke(51,51,51);//Alligrater Pink, Subject to Change in Near Future.
+				rect(this.x - this.width/2, this.y - this.height/2, textWidth(this.sender+30), 50);
+				noStroke();
+				fill(51,51,51);//Alligrater Pink
+				textSize(18);
+				textAlign(CENTER);
+
+				text(this.sender, this.x - this.width/2, this.y - this.height/2);
+			}
 		}
 
 		getType(){
