@@ -38,6 +38,25 @@ class TextBundle{
 		return this.jsonchunks[i].content[j];
 	}
 
+	getChunkTag(tag){
+		var inxi = 0;
+		var canfind = false;
+		for(var i = 0; i < this.jsonchunks.length; i++){
+				if(this.jsonchunks[i].chunk == tag){
+					canfind = true;
+					inxi = i;
+					break; //Finally a place I can use break.
+			}
+		}
+		if(canfind){
+			this.loadContent(inxi,0);
+			console.log("Chunk located...relocating");
+		}
+		else{
+			console.log("Cannot find chunk with tag: " + tag);
+		}
+	}
+
 	getTag(tag){
 		var inxi = 0;
 		var inxj = 0;
@@ -228,8 +247,8 @@ class iBox{
 					GameManager.getInstance().textbundle.getTag(tagname);
 				}
 				else if(this.action.startsWith("$chunk")){
-									//Go to place with the specific tag.
-									GameManager.getInstance().next();
+					var tagname = this.action.split(':')[1];
+					GameManager.getInstance().textbundle.getChunkTag(tagname);
 				}
 				else{
 					//Not valid action, use default.
