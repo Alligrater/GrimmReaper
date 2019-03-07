@@ -25,15 +25,6 @@ class TextBundle{
 		this.next();
 	}
 
-	//I don't even know why we need this.
-	getJson(){
-		return this.jsonobject;
-	}
-
-	getCurrentType(){
-		return this.jsonchunks[this.index_i][this.index_j].type;
-	}
-
 	draw(){
 		/*
 
@@ -43,46 +34,68 @@ class TextBundle{
 		}
 	}
 
-	next(){
-		//Clear the list of objects first.
+	getChunkData(i, j){
+		return this.jsonchunks[i].content[j];
+	}
 
-
-		//Limitations on Grimm Composer: Message Will ALWAYS be a Length of 1 Array.
-		if(this.jsonchunks[this.index_i][this.index_j+1]){
-			this.index_j += 1;
-			if(this.jsonchunks[this.index_i][this.index_j].type == "Message"){
-				this.lastmessage = this.jsonchunks[this.index_i][this.index_j].parameters[0];
+	getTag(tag){
+		var inxi = 0;
+		var inxj = 0;
+		var canfind = false;
+		for(var i = 0; i < this.jsonchunks.length; i++){
+			for(var j = 0; j < this.jsonchunks[i].content.length; j++){
+				if(this.getChunkData(i, j).tag && this.getChunkData(i, j).tag == tag){
+					canfind = true;
+					inxi = i;
+					inxj = j;
+					break; //Finally a place I can use break.
+				}
 			}
-			console.log(this.jsonchunks[this.index_i][this.index_j].parameters[0])
+		}
+		if(canfind){
+			this.loadContent(inxi,inxj);
+			console.log("content located...relocating");
 		}
 		else{
-			console.log("you are at the end of the plot.")
+			console.log("Cannot find content with tag: " + tag);
 		}
+	}
 
+	loadContent(i, j){
+		if(this.getChunkData(i, j)){
+			this.index_i = i;
+			this.index_j = j;
+			if(this.getChunkData(this.index_i, this.index_j).type == "Message"){
+				this.lastmessage = this.getChunkData(this.index_i, this.index_j).parameters[0];
+			}
+			console.log(this.getChunkData(this.index_i, this.index_j).parameters[0])
+		}
+		else{
+			console.log("Failed to locate content at " + i + ":" + j);
+		}
 		this.listofobjects = [];
-		//Determine what to do with each type of objects: message, choices, textbox.
-		if(this.jsonchunks[this.index_i][this.index_j].type == "Choices"){
+		if(this.getChunkData(this.index_i, this.index_j).type == "Choices"){
 			//Create iBox objects. subject to change and will be easy to change.
 			var msgbox = new iBox(this.lastmessage, 800, 750, 1400, 300, "BlockInput"); //Requires clicking a button to proceed.
 			this.listofobjects.push(msgbox);
 			//Create a set of options.
-			var boxcount = this.jsonchunks[this.index_i][this.index_j].parameters.length;
+			var boxcount = this.getChunkData(this.index_i, this.index_j).parameters.length;
 			for(var i = 0; i < boxcount; i++){
 				//by default, they should have fixed width and height.
-				var boxtext = this.jsonchunks[this.index_i][this.index_j].parameters[i];
+				var boxtext = this.getChunkData(this.index_i, this.index_j).parameters[i];
 
 				var box = new iBox(boxtext, 800 + TEXT_PADDING, 350 + i * 120, textWidth(boxtext) + TEXT_PADDING * 2, CHOICE_BOXHEIGHT, "Choices");
-				if(this.jsonchunks[this.index_i][this.index_j].action){
-					box.action = this.jsonchunks[this.index_i][this.index_j].action[i];
+				if(this.getChunkData(this.index_i, this.index_j).action){
+					box.action = this.getChunkData(this.index_i, this.index_j).action[i];
 				}
 				console.log(box.action);
 				this.listofobjects.push(box);
 			}
 
 		}
-		else if(this.jsonchunks[this.index_i][this.index_j].type == "Message"){
-			var msgbox = new iBox(this.jsonchunks[this.index_i][this.index_j].parameters[0], 800, 750, MSG_BOXWIDTH, MSG_BOXHEIGHT, "Message");
-			msgbox.sender = this.jsonchunks[this.index_i][this.index_j].sender;
+		else if(this.getChunkData(this.index_i, this.index_j).type == "Message"){
+			var msgbox = new iBox(this.getChunkData(this.index_i, this.index_j).parameters[0], 800, 750, MSG_BOXWIDTH, MSG_BOXHEIGHT, "Message");
+			msgbox.sender = this.getChunkData(this.index_i, this.index_j).sender;
 			this.listofobjects.push(msgbox);
 		}
 		else{
@@ -92,10 +105,18 @@ class TextBundle{
 		}
 	}
 
+	next(){
+		//Clear the list of objects first.
+
+		//Limitations on Grimm Composer: Message Will ALWAYS be a Length of 1 Array.
+		this.loadContent(this.index_i, this.index_j+1);
+
+	}
+
 	showlog(){
 		for(var x = 0; x < this.index_j; x++){
-			if(this.jsonchunks[this.index_i][x].type == "Message"){
-				console.log(this.jsonchunks[this.index_i][x].parameters[0])
+			if(this.getChunkData(this.index_i, x).type == "Message"){
+				console.log(this.getChunkData(this.index_i, x).parameters[0])
 			}
 		}
 	}
@@ -201,7 +222,21 @@ class iBox{
 			if(this.action){
 				console.log("Action: " + this.action);
 				//for now, we default this to next.
-				GameManager.getInstance().next();
+				if(this.action.startsWith("$tag")){
+					//Go to place with the specific tag.
+					var tagname = this.action.split(':')[1];
+					GameManager.getInstance().textbundle.getTag(tagname);
+				}
+				else if(this.action.startsWith("$chunk")){
+									//Go to place with the specific tag.
+									GameManager.getInstance().next();
+				}
+				else{
+					//Not valid action, use default.
+					console.log("No Action Specified, Defaulting to Next()...");
+					GameManager.getInstance().next();
+				}
+
 			}
 			else{
 				console.log("No Action Specified, Defaulting to Next()...");
