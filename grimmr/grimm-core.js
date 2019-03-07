@@ -1,46 +1,11 @@
 //Grimm Reaper Core.
 
-class Game{
-	constructor(){
-		//Create a black canvas on the screen for now.
-		var textbundle = new TextBundle();
-		var documentWidth = window.innerWidth;
-		var documentHeight = window.innerHeight;
-		createCanvas(documentWidth, documentHeight);
-	}
-	
-	update(){
-		background(51);
-
-		this.textbundle.draw();
-	}
-	
-	next(){
-		this.textbundle.next();
-		//clear the list of game objects.
-	}
-	
-	setJson(jsonobject){
-		if(!this.textbundle){
-			this.textbundle = new TextBundle();
-		}
-		this.textbundle.setJson(jsonobject);
-	}
-	
-	notifyAll(e){
-		//Get all objects currently in the text bundle, then notify them about the event.
-		for(var i = 0; i < this.textbundle.listofobjects.length; i++){
-			this.textbundle.listofobjects[i].EventHandler(e);
-		}
-	}
-
-}
 
 //This will be the collection of a set of messages.
 //And will keep track what is on screen - i.e. characters, backdrop, current messageobject.
 
 class TextBundle{
-	
+
 	constructor(){
 		this.listofobjects = [];
 		this.lastmessage = "";
@@ -49,9 +14,9 @@ class TextBundle{
 		if(!this.jsonchunks){
 			console.log("Waiting for chunk data input.")
 		}
-		
+
 	}
-	
+
 	setJson(jsonobject){
 		this.index_i = 0;
 		this.index_j = -1;
@@ -59,29 +24,29 @@ class TextBundle{
 		this.jsonchunks = jsonobject.jsonchunks;
 		this.next();
 	}
-	
+
 	//I don't even know why we need this.
 	getJson(){
 		return this.jsonobject;
 	}
-	
+
 	getCurrentType(){
 		return this.jsonchunks[this.index_i][this.index_j].type;
 	}
-	
+
 	draw(){
 		/*
-		
+
 		*/
 		for(var i = 0; i < this.listofobjects.length; i++){
 			this.listofobjects[i].draw();
 		}
 	}
-	
+
 	next(){
 		//Clear the list of objects first.
-		
-		
+
+
 		//Limitations on Grimm Composer: Message Will ALWAYS be a Length of 1 Array.
 		if(this.jsonchunks[this.index_i][this.index_j+1]){
 			this.index_j += 1;
@@ -93,13 +58,14 @@ class TextBundle{
 		else{
 			console.log("you are at the end of the plot.")
 		}
-		
+
 		this.listofobjects = [];
 		//Determine what to do with each type of objects: message, choices, textbox.
 		if(this.jsonchunks[this.index_i][this.index_j].type == "Choices"){
 			//Create iBox objects. subject to change and will be easy to change.
-			var msgbox = new iBox(this.lastmessage, 800, 750, 1400, 300, "Generic");
+			var msgbox = new iBox(this.lastmessage, 800, 750, 1400, 300, "BlockInput"); //Requires clicking a button to proceed.
 			this.listofobjects.push(msgbox);
+			//Create a set of options.
 			var boxcount = this.jsonchunks[this.index_i][this.index_j].parameters.length;
 			for(var i = 0; i < boxcount; i++){
 				//by default, they should have fixed width and height.
@@ -110,18 +76,19 @@ class TextBundle{
 				console.log(box.action);
 				this.listofobjects.push(box);
 			}
-			
+
 		}
 		else if(this.jsonchunks[this.index_i][this.index_j].type == "Message"){
-			var msgbox = new iBox(this.jsonchunks[this.index_i][this.index_j].parameters[0], 800, 750, 1400, 300, "Generic");
+			var msgbox = new iBox(this.jsonchunks[this.index_i][this.index_j].parameters[0], 800, 750, 1400, 300, "Message");
 			this.listofobjects.push(msgbox);
 		}
 		else{
+			//Special Condition Resolver: Stage and Action Tags.
 			var msgbox = new iBox("This part is not meant for display. If you manage to see this part, it means the code is running fine.", 800, 750, 1400, 300, "Generic");
 			this.listofobjects.push(msgbox);
 		}
 	}
-	
+
 	showlog(){
 		for(var x = 0; x < this.index_j; x++){
 			if(this.jsonchunks[this.index_i][x].type == "Message"){
@@ -129,8 +96,8 @@ class TextBundle{
 			}
 		}
 	}
-	
-	
+
+
 }
 
 //Interactive Box.
@@ -144,16 +111,10 @@ class iBox{
 			this.width = width; //Use absolute width. We don't scale the window anyways.
 			this.height = height;
 			this.action;
+			this.lifetime = 0;
+			this.iscomplete = false;
 		}
-		
-		setAction(action){
-			this.action = action;
-		}
-		
-		getAction(){
-			return this.action;
-		}
-		
+
 		draw(){
 			if(this.isfocused == false){
 				//First, draw a box behind it. We use the center as position.
@@ -162,12 +123,27 @@ class iBox{
 				strokeWeight(4);
 				stroke(239,31,149);//Alligrater Pink, Subject to Change in Near Future.
 				rect(this.x, this.y, this.width, this.height);
-				
+
 				noStroke();
 				fill(239,31,149);//Alligrater Pink
 				textSize(18);
 				textAlign(CENTER);
-				text(this.message, this.x, this.y);
+
+				if(this.type == "Message" && this.iscomplete != true){
+					if(this.lifetime > this.message.length){
+						text(this.message, this.x, this.y);
+						this.iscomplete = true;
+					}
+					else{
+						text(this.message.substring(0, this.lifetime), this.x, this.y);
+					}
+
+				}
+				else{
+					text(this.message, this.x, this.y);
+					this.iscomplete = true;
+				}
+
 			}
 			else{
 				//First, draw a box behind it. We use the center as position.
@@ -176,39 +152,59 @@ class iBox{
 				strokeWeight(4);
 				stroke(51,51,51);//Alligrater Pink, Subject to Change in Near Future.
 				rect(this.x, this.y, this.width, this.height);
-				
+
 				noStroke();
 				fill(51,51,51);//Alligrater Pink
 				textSize(18);
 				textAlign(CENTER);
-				text(this.message, this.x, this.y);			
-				
+				text(this.message, this.x, this.y);
 			}
 
 		}
-		
+
 		getType(){
 			return this.type;
 		}
-		
+
+		executeAction(){
+			if(!this.iscomplete){
+				this.iscomplete = true;
+				return;
+			}
+			if(this.action){
+				console.log("Action: " + this.action);
+				//for now, we default this to next.
+				GameManager.getInstance().next();
+			}
+			else{
+				console.log("No Action Specified, Defaulting to Next()...");
+				GameManager.getInstance().next();
+			}
+		}
+
 		EventHandler(e){
 			//Handles Event.
-			this.isfocused = false;
-			if(this.type == "Choices" && e.getType() == "MouseMoveEvent"){
-				if(e.x > (this.x - this.width/2) && e.x < (this.x + this.width/2) && e.y > (this.y - this.height/2) && e.y < (this.y + this.height/2)){
-					this.isfocused = true;
+			if(e.getType() == "MouseMoveEvent"){
+				this.isfocused = false;
+				this.lifetime += 1;
+				if(this.type == "Choices"){
+					if(e.x > (this.x - this.width/2) && e.x < (this.x + this.width/2) && e.y > (this.y - this.height/2) && e.y < (this.y + this.height/2)){
+						this.isfocused = true;
+					}
+				}
+				if(this.type == "Message" || this.type == "Generic"){
+
 				}
 			}
-			else if(this.type == "Choices" && e.getType() == "MouseClickEvent"){
-				if(e.x > (this.x - this.width/2) && e.x < (this.x + this.width/2) && e.y > (this.y - this.height/2) && e.y < (this.y + this.height/2)){
-					//Log the action to console.
-					if(this.action){
-						console.log(this.action)
-					}
-					else{
-						console.log("No action specified.")
+			else if(e.getType() == "MouseClickEvent"){
+				if(this.type != "BlockInput"){
+					if(e.x > (this.x - this.width/2) && e.x < (this.x + this.width/2) && e.y > (this.y - this.height/2) && e.y < (this.y + this.height/2)){
+						//Log the action to console.
+						this.executeAction();
+
 					}
 				}
+
 			}
 		}
 
