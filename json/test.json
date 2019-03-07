@@ -1,0 +1,95 @@
+{
+	"jsonchunks": [{
+		"chunk":"ice_shop",
+		"content":[
+			{
+				"type": "Message",
+				"sender": "系统",
+				"parameters":["*噔噔蹬蹬（入店音）*"]
+			},
+			{
+				"type": "Message",
+				"sender": "梁启超",
+				"parameters":["弟啊，这次你又要些什么啊"]
+			},
+			{
+				"type": "Message",
+				"sender": "蜘猪侠",
+				"parameters":["兄啊，同我整杯傻风牌仙草"]
+			},
+			{
+				"type": "Choices",
+				"parameters": ["下两粒珍珠", "下两颗椰果", "下两颗喷香滴"],
+				"action":["$next","$chunk:2","$line:4" ]
+			},
+			{
+				"type": "Choices",
+				"parameters": ["三半花生", "三块龟苓膏"],
+				"action":["$next","$chunk:2"]
+			},
+			{
+				"type": "Choices",
+				"parameters": ["四粒葡萄干", "四粒米青"],
+				"action":["$next","$chunk:2"]
+			},
+			{
+				"type": "Choices",
+				"parameters": ["再拿个和别人不一样的汤勺", "再拿个装红茶的杯子装着"],
+				"action":["$next","$chunk:2"]
+			},
+			{
+				"type": "Message",
+				"sender": "系统",
+				"parameters":["*噗叽啪（仙草制作中）*"]
+			},
+			{
+				"type": "Message",
+				"sender": "系统",
+				"parameters":["*锵锵锵（老板登门）*"]
+			},
+			{
+				"type": "Message",
+				"sender": "梁启超",
+				"parameters":["弟啊,你这样怎么吃啊"]
+			},
+			{
+				"type": "Choices",
+				"parameters":["日恁毛","Fuck♂You"]
+			},
+			{
+				"type": "Message",
+				"sender": "系统",
+				"parameters":["*锵锵锵（老板归位）*"]
+			},
+			{
+				"type": "Message",
+				"sender": "蜘猪侠",
+				"parameters":["好烦啊，来放点音乐吧"]
+			},
+			{
+				"type": "Choices",
+				"parameters": ["播放《沙家滨》", "播放《病名为拆》"],
+				"action":["$next","$chunk:2"]
+			},
+			{
+				"type": "Message",
+				"sender": "KBS",
+				"parameters":["弟啊你神经啊！"]
+			}
+		]},{
+		"chunk":"shower_room",
+		"content":[
+			{
+				"type": "Action",
+				"parameters":["setCharacter('Van Darkholme','LEFT')"]
+			},
+			{
+				"type": "Message",
+				"sender": "Van Darkholme",
+				"parameters":["Fuck You Leather Man!"]
+			}
+		]
+	}
+	]
+
+}
