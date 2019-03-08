@@ -7,6 +7,8 @@
 class TextBundle{
 
 	constructor(){
+		this.background;
+		this.listofactors = [];
 		this.listofobjects = [];
 		this.lastmessage = "";
 		this.index_i = 0;
@@ -51,9 +53,11 @@ class TextBundle{
 		if(canfind){
 			this.loadContent(inxi,0);
 			console.log("Chunk located...relocating");
+			return true;
 		}
 		else{
 			console.log("Cannot find chunk with tag: " + tag);
+			return false;
 		}
 	}
 
@@ -74,9 +78,11 @@ class TextBundle{
 		if(canfind){
 			this.loadContent(inxi,inxj);
 			console.log("content located...relocating");
+			return true;
 		}
 		else{
 			console.log("Cannot find content with tag: " + tag);
+			return false;
 		}
 	}
 
@@ -115,7 +121,25 @@ class TextBundle{
 		else if(this.getChunkData(this.index_i, this.index_j).type == "Message"){
 			var msgbox = new iBox(this.getChunkData(this.index_i, this.index_j).parameters[0], 800, 750, MSG_BOXWIDTH, MSG_BOXHEIGHT, "Message");
 			msgbox.sender = this.getChunkData(this.index_i, this.index_j).sender;
+			if(this.getChunkData(this.index_i, this.index_j).action){
+				msgbox.action = this.getChunkData(this.index_i, this.index_j).action[i]; //If it has an action
+			}
 			this.listofobjects.push(msgbox);
+		}
+		else if(this.getChunkData(this.index_i, this.index_j).type == "Action"){
+			var actioncount = this.getChunkData(this.index_i, this.index_j).action.length; //How many actions are there?
+			for(var i = 0; i < actioncount; i++){
+				var actionbox = new iBox("", 800, 750, MSG_BOXWIDTH, MSG_BOXHEIGHT, "Message"); //No message will be displayed.
+				if(this.getChunkData(this.index_i, this.index_j).action){
+					actionbox.action = this.getChunkData(this.index_i, this.index_j).action[i]; //If it has an action
+				}
+				actionbox.iscomplete = true; //Is complete the moment it is created.
+				actionbox.executeAction();//Directly runs the action and jump to the next scene.
+				if(i == actioncount - 1){
+					GameManager.getInstance().next();
+				}
+			}
+
 		}
 		else{
 			//Special Condition Resolver: Stage and Action Tags.
@@ -194,8 +218,8 @@ class iBox{
 
 				}
 				else{
-					text(this.message, this.calculateX(), this.calculateY());
 					this.iscomplete = true;
+					text(this.message, this.calculateX(), this.calculateY());
 				}
 
 			}
@@ -244,11 +268,35 @@ class iBox{
 				if(this.action.startsWith("$tag")){
 					//Go to place with the specific tag.
 					var tagname = this.action.split(':')[1];
-					GameManager.getInstance().textbundle.getTag(tagname);
+					if(!GameManager.getInstance().textbundle.getTag(tagname)){
+						GameManager.getInstance().next();
+					}
 				}
 				else if(this.action.startsWith("$chunk")){
 					var tagname = this.action.split(':')[1];
-					GameManager.getInstance().textbundle.getChunkTag(tagname);
+					if(!GameManager.getInstance().textbundle.getChunkTag(tagname)){
+							GameManager.getInstance().next();
+					}
+				}
+				else if(this.action.startsWith("$clearactor")){
+					//Remove all actors on the stage.
+					GameManager.getInstance().textbundle.listofactors = [];
+					//Removes all actors.
+				}
+				else if(this.action.startsWith("$replaceactor")){
+					//Replaces the actor with another one.
+					//$replaceactor:goldenk:grimmr
+				}
+				else if(this.action.startsWith("$removeactor")){
+					//Remove actor with the name 
+					//$removeactor:goldenk
+				}
+				else if(this.action.startsWith("$actor")){
+					//Create actors for the stage. It should have 3 parameters.
+				}
+				else if(this.action.startsWith("$stage") || this.action.startsWith("$background")){
+					//Create a background for the stage
+					//This overrides the previous stage by clearing it.
 				}
 				else{
 					//Not valid action, use default.
@@ -274,7 +322,7 @@ class iBox{
 					}
 				}
 				if(this.type == "Message" || this.type == "Generic"){
-
+					
 				}
 			}
 			else if(e.getType() == "MouseClickEvent"){
