@@ -31,6 +31,13 @@ class TextBundle{
 		/*
 
 		*/
+		//Draw background actors first
+		background(51);
+		for(var i = 0; i < this.listofactors.length; i++){
+			this.listofactors[i].draw();
+			//image(ResourceManager.getInstance().getGIfromName("goldenk").img, 100, 300);
+		}
+		//Then draw front boxes
 		for(var i = 0; i < this.listofobjects.length; i++){
 			this.listofobjects[i].draw();
 		}
@@ -86,6 +93,8 @@ class TextBundle{
 		}
 	}
 
+
+//Hard code, yes hard code.
 	loadContent(i, j){
 		if(this.getChunkData(i, j)){
 			this.index_i = i;
@@ -105,6 +114,7 @@ class TextBundle{
 			this.listofobjects.push(msgbox);
 			//Create a set of options.
 			var boxcount = this.getChunkData(this.index_i, this.index_j).parameters.length;
+
 			for(var i = 0; i < boxcount; i++){
 				//by default, they should have fixed width and height.
 				var boxtext = this.getChunkData(this.index_i, this.index_j).parameters[i];
@@ -118,6 +128,8 @@ class TextBundle{
 			}
 
 		}
+
+
 		else if(this.getChunkData(this.index_i, this.index_j).type == "Message"){
 			var msgbox = new iBox(this.getChunkData(this.index_i, this.index_j).parameters[0], 800, 750, MSG_BOXWIDTH, MSG_BOXHEIGHT, "Message");
 			msgbox.sender = this.getChunkData(this.index_i, this.index_j).sender;
@@ -126,6 +138,8 @@ class TextBundle{
 			}
 			this.listofobjects.push(msgbox);
 		}
+
+
 		else if(this.getChunkData(this.index_i, this.index_j).type == "Action"){
 			var actioncount = this.getChunkData(this.index_i, this.index_j).action.length; //How many actions are there?
 			for(var i = 0; i < actioncount; i++){
@@ -136,15 +150,14 @@ class TextBundle{
 				actionbox.iscomplete = true; //Is complete the moment it is created.
 				actionbox.executeAction();//Directly runs the action and jump to the next scene.
 				if(i == actioncount - 1){
-					GameManager.getInstance().next();
+					this.next();
 				}
 			}
-
 		}
 		else{
 			//Special Condition Resolver: Stage and Action Tags.
-			var msgbox = new iBox("This part is not meant for display. If you manage to see this part, it means the code is running fine.", 800, 750, MSG_BOXWIDTH, MSG_BOXHEIGHT, "Generic");
-			this.listofobjects.push(msgbox);
+			console.log("Found unspecified line, defaulting to next.")
+			this.next();
 		}
 	}
 
@@ -265,36 +278,56 @@ class iBox{
 			if(this.action){
 				console.log("Action: " + this.action);
 				//for now, we default this to next.
-				if(this.action.startsWith("$tag")){
+				if(this.action.startsWith("$tag:")){
 					//Go to place with the specific tag.
 					var tagname = this.action.split(':')[1];
 					if(!GameManager.getInstance().textbundle.getTag(tagname)){
 						GameManager.getInstance().next();
 					}
 				}
-				else if(this.action.startsWith("$chunk")){
+				else if(this.action.startsWith("$chunk:")){
 					var tagname = this.action.split(':')[1];
 					if(!GameManager.getInstance().textbundle.getChunkTag(tagname)){
 							GameManager.getInstance().next();
 					}
 				}
-				else if(this.action.startsWith("$clearactor")){
+				else if(this.action.startsWith("$clearactor:")){
 					//Remove all actors on the stage.
 					GameManager.getInstance().textbundle.listofactors = [];
 					//Removes all actors.
 				}
-				else if(this.action.startsWith("$replaceactor")){
+				else if(this.action.startsWith("$replaceactor:")){
 					//Replaces the actor with another one.
 					//$replaceactor:goldenk:grimmr
 				}
-				else if(this.action.startsWith("$removeactor")){
-					//Remove actor with the name 
+				else if(this.action.startsWith("$removeactor:")){
+					//Remove actor with the name
 					//$removeactor:goldenk
+					var argument = this.action.split(':');
+					var canfind = false;
+					var index = -1;
+					for(var i = 0; i < GameManager.getInstance().textbundle.listofactors.length; i++){
+						if(GameManager.getInstance().textbundle.listofactors[i].getName() == argument[1]){
+							canfind = true;
+							index = i;
+						}
+					}
+
+					if(canfind){
+						GameManager.getInstance().textbundle.listofactors.splice(i, 1);
+					}
+					//This should work.
 				}
-				else if(this.action.startsWith("$actor")){
-					//Create actors for the stage. It should have 3 parameters.
+				else if(this.action.startsWith("$actor:")){
+					//Create actors for the stage. It should have 4 parameters: resource name, name in the list, x, and y.
+					var argument = this.action.split(':');
+					var actor = new StageActor(ResourceManager.getInstance().getGrImageFromName(argument[1]), argument[2], parseInt(argument[3]), parseInt(argument[4]));
+					console.log(actor.x);
+					console.log(actor.y);
+					GameManager.getInstance().textbundle.listofactors.push(actor);
+
 				}
-				else if(this.action.startsWith("$stage") || this.action.startsWith("$background")){
+				else if(this.action.startsWith("$stage:") || this.action.startsWith("$background:")){
 					//Create a background for the stage
 					//This overrides the previous stage by clearing it.
 				}
@@ -322,7 +355,7 @@ class iBox{
 					}
 				}
 				if(this.type == "Message" || this.type == "Generic"){
-					
+
 				}
 			}
 			else if(e.getType() == "MouseClickEvent"){

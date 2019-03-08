@@ -12,7 +12,6 @@ var GameManager = (function(){
 		return {
 		//Public Fields
 			update(){
-				background(51);
 				this.textbundle.draw();
 			},
 			next(){
@@ -57,12 +56,13 @@ var ResourceManager = (function(){
 					for (var i=0; i<items.length; i++) {
 						console.log(items[i]);
 						if(items[i].includes(".")){//Is an image, not a path.){
+							var img = loadImage(relativepath + items[i]);
 							imageList.push(new GrImage(relativepath + items[i], items[i].substring(0, items[i].indexOf("."))));//This way it generates a useable name.
 						}
-		
+
 					}
 				});
-				
+
 				for(var i = 0; i < imageList.length; i++){
 					console.log("Image: " + imageList[i].name);//this should work fine.
 				}
@@ -73,6 +73,15 @@ var ResourceManager = (function(){
 			//Public Fields
 			getImageList(){
 				return imageList;
+			},
+			getGrImageFromName(name){
+				for(var i = 0; i < imageList.length; i ++){
+					if(imageList[i].name = name){
+						console.log("Found GI with name: " + name);
+						return imageList[i];
+					}
+				}
+				return null;
 			}
 
 		}
