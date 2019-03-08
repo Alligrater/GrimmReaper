@@ -201,7 +201,7 @@ class iBox{
 		}
 
 		calculateY(){
-			return this.y - this.height/2 + TEXT_PADDING;
+			return this.y - this.height/2 + TEXT_PADDING_TOP;
 		}
 
 		draw(){
@@ -299,6 +299,14 @@ class iBox{
 				else if(this.action.startsWith("$replaceactor:")){
 					//Replaces the actor with another one.
 					//$replaceactor:goldenk:grimmr
+					var argument = this.action.split(':');
+					for(var i = 0; i < GameManager.getInstance().textbundle.listofactors.length; i++){
+						if(GameManager.getInstance().textbundle.listofactors[i].getName() == argument[1]){
+							GameManager.getInstance().textbundle.listofactors[i].changeImage(ResourceManager.getInstance().getGrImageFromName(argument[2]));
+							console.log("actor changed.")
+							break;
+						}
+					}
 				}
 				else if(this.action.startsWith("$removeactor:")){
 					//Remove actor with the name
@@ -310,20 +318,18 @@ class iBox{
 						if(GameManager.getInstance().textbundle.listofactors[i].getName() == argument[1]){
 							canfind = true;
 							index = i;
+							GameManager.getInstance().textbundle.listofactors.splice(i, 1);
+							console.log("removed actor from the stage.")
+							break;
 						}
 					}
 
-					if(canfind){
-						GameManager.getInstance().textbundle.listofactors.splice(i, 1);
-					}
-					//This should work.
 				}
 				else if(this.action.startsWith("$actor:")){
 					//Create actors for the stage. It should have 4 parameters: resource name, name in the list, x, and y.
 					var argument = this.action.split(':');
 					var actor = new StageActor(ResourceManager.getInstance().getGrImageFromName(argument[1]), argument[2], parseInt(argument[3]), parseInt(argument[4]));
-					console.log(actor.x);
-					console.log(actor.y);
+					console.log(actor);
 					GameManager.getInstance().textbundle.listofactors.push(actor);
 
 				}

@@ -54,18 +54,15 @@ var ResourceManager = (function(){
 				var relativepath = './res/image/' //actual path for p5 to work
 				fs.readdir(path, function(err, items) {
 					for (var i=0; i<items.length; i++) {
-						console.log(items[i]);
 						if(items[i].includes(".")){//Is an image, not a path.){
 							var img = loadImage(relativepath + items[i]);
-							imageList.push(new GrImage(relativepath + items[i], items[i].substring(0, items[i].indexOf("."))));//This way it generates a useable name.
+							var gr = new GrImage(relativepath + items[i], img, items[i].substring(0, items[i].indexOf(".")));
+							console.log(gr);
+							imageList.push(gr);//This way it generates a useable name.
 						}
 
 					}
 				});
-
-				for(var i = 0; i < imageList.length; i++){
-					console.log("Image: " + imageList[i].name);//this should work fine.
-				}
 			}
 			//Should load all image resources from the file.
 			loadImages();//This outputs whatever's under the folder for now.
@@ -76,7 +73,7 @@ var ResourceManager = (function(){
 			},
 			getGrImageFromName(name){
 				for(var i = 0; i < imageList.length; i ++){
-					if(imageList[i].name = name){
+					if(imageList[i].name == name){
 						console.log("Found GI with name: " + name);
 						return imageList[i];
 					}

@@ -1,5 +1,5 @@
 const TEXT_PADDING = 30;//Default padding value.
-const TEXT_PADDING_TOP = 80;//Default padding value.
+const TEXT_PADDING_TOP = 50;//Default padding value.
 const CHOICE_BOXHEIGHT = 100;
 const CHOICE_BOXWIDTH = 300;
 

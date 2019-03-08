@@ -6,8 +6,6 @@ class StageActor{
 		this.grimage = grimage;
 		this.x = x;
 		this.y = y;
-		this.width = grimage.width;
-		this.height = grimage.height;
 		this.actorname = actorname;
 	}
 
@@ -15,8 +13,9 @@ class StageActor{
 		//literally just draw something.
 		//Always use center mode.
 		//It is drawing, but somehow not shown on the screen.
-		//image(this.grimage.img, this.x - this.width/2, this.y - this.height / 2);
-			image(this.grimage.img, this.x, this.y);
+		imageMode(CENTER);
+		image(this.grimage.img, this.x, this.y);
+		//image(this.grimage.img, this.x, this.y);
 	}
 
 	getName(){
@@ -25,16 +24,14 @@ class StageActor{
 
 	changeImage(newgi){
 		this.grimage = newgi;
-		this.width = newgi.width;
-		this.height = newgi.height;
 	}
 
 }
 
 class GrImage{
-	constructor(path, name){
+	constructor(path, img, name){
 		this.path = path;
-		this.img = loadImage(path);
+		this.img = img;
 		this.name = name;
 	}
 }
